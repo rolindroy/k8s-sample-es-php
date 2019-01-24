@@ -1,0 +1,15 @@
+{
+    "name": "K8S/sample-project-web-application",
+    "description": "Kubernetes PHP Sample Project",
+    "license": "-",
+    "authors": [
+        {
+            "name": "rolindroy",
+            "email": "hello@rolindroy.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "guzzlehttp/guzzle": "^6.3@dev"
+    }
+}
