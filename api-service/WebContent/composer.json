@@ -1,0 +1,16 @@
+{
+    "name": "K8S/sample-project",
+    "description": "Kubernetes PHP Sample Project",
+    "license": "-",
+    "authors": [
+        {
+            "name": "rolindroy",
+            "email": "hello@rolindroy.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+      "elasticsearch/elasticsearch": "~5.0",
+        "slim/slim": "^3.0"
+    }
+}
