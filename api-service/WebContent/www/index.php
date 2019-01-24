@@ -42,11 +42,10 @@ $app->get('/', function ($request, $response, $args) {
 });
 
 $app->get('/getindex', function ($request, $response, $args) {
-  $esClient = ClientBuilder::create()           // Instantiate a new ClientBuilder
-              ->setHosts(array(AppConfig::config('elastic.default.host')))      // Set the hosts
-              ->build();              // Build the client object
+  $esClient = ClientBuilder::create()
+              ->setHosts(array(AppConfig::config('elastic.default.host')))
+              ->build();
 
-  // Listing all the available indexes.
   $indices = $esClient->cat()->indices(array('index' => '*'));
 
   $response->write(json_encode($indices));
@@ -70,7 +69,6 @@ $app->get('/getdatabyindex/{index}', function ($request, $response, $args) {
     }
 });
 
-
 $app->get('/getdatabyid/{index}/{id}', function ($request, $response, $args) {
     if (isset($args['index']) && isset($args['id'])){
       $esClient = ClientBuilder::create()
@@ -87,5 +85,13 @@ $app->get('/getdatabyid/{index}/{id}', function ($request, $response, $args) {
     }
 });
 
+$app->post('/setdata', function ($request, $response, $args) {
+  $allPostPutVars = $request->getParsedBody();
+  $esClient = ClientBuilder::create()
+              ->setHosts(array(AppConfig::config('elastic.default.host')))
+              ->build();
+  $responseData = $esClient->index($allPostPutVars);
+  $response->write(json_encode($responseData));
+});
 
 $app->run();
