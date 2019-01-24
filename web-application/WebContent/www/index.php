@@ -92,19 +92,61 @@ if ($response->getStatusCode() == "200")
     $searchPt = $_GET["_search"];
     if (isset($_GET["_id"]) && $_GET["_id"] != "")
     {
-      $res_getdatabyid = $client->request('GET', $httpProtocol . AppConfig::config('api.url').'/getdatabyid');
+      $requestPt = "/getdatabyid/" . $searchPt . "/" . $_GET["_id"];
+      $res_getdatabyid = $client->request('GET', $httpProtocol . AppConfig::config('api.url') . $requestPt );
       if ($res_getdatabyid->getStatusCode() == "200")
       {
         $responseIdData = $res_getdatabyid->getBody();
-        $idData = json_decode($responseIdData);
+        $idData = (array) json_decode($responseIdData);
+        if (isset($idData['total']) && $idData['total'] > 0)
+        {
+          echo "<pre>";
+          $hits = (array) $idData['hits'][0];
+          $source = (array) $hits['_source'];
+          echo '<table style="width:100%" >';
+          echo '<thead><tr><th>ID</th><th>Source Data</th></tr></thead>';
+          echo '<tr>';
+          echo '<td>'.$_GET["_id"].'</td>';
+          echo '<td>';
+          print_r($source);
+          echo '</td>';
+          echo '</tr>';
+          echo '</table>';
+        }
       }
     }
     else {
-      $res_getdatabyindex = $client->request('GET', $httpProtocol . AppConfig::config('api.url').'/getdatabyindex');
+      $requestPt = "/getdatabyindex/" . $searchPt;
+      $res_getdatabyindex = $client->request('GET', $httpProtocol . AppConfig::config('api.url') . $requestPt );
       if ($res_getdatabyindex->getStatusCode() == "200")
       {
         $responseDataAll = $res_getdatabyindex->getBody();
-        $data = json_decode($responseDataAll);
+        $data = (array) json_decode($responseDataAll);
+        if(isset($data['total']) && $data['total'] > 0)
+        {
+          echo '<pre>';
+          echo '<table style="width:100%" >';
+          echo '<thead><tr><th>Index</th><th>Type</th><th>ID</th></tr></thead>';
+          for ($dtSource = 0; $dtSource <= $data['total']; $dtSource++)
+          {
+            $hits = (array) $data['hits'][$dtSource];
+            $curIndex = $hits['_index'];
+            $type = $hits['_type'];
+            $id = $hits['_id'];
+            if ($id != "")
+            {
+              echo '<tr>';
+              echo '<td>'.$curIndex.'</td>';
+              echo '<td>'.$type.'</td>';
+              echo '<td><a href=index.php?_search='.$curIndex.'&_id='.$id.'>'.$id.'</a></td>';
+              echo '</tr>';
+            }
+          }
+          echo '</table>';
+        }
+        else {
+         echo "No data found!";
+        }
       }
     }
   }

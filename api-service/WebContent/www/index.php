@@ -29,6 +29,7 @@ $app->get('/', function ($request, $response, $args) {
       'GET: /hello',
       'GET: /getindex',
       'GET: /getdatabyindex/{index}',
+      'GET: /getdatabyid/{index}/{id}',
       'POST: /setdata'
     );
     $response->write(json_encode("Welcome to Kubernetes PHP Sample App"));
@@ -54,11 +55,37 @@ $app->get('/getindex', function ($request, $response, $args) {
 
 $app->get('/getdatabyindex/{index}', function ($request, $response, $args) {
     if (isset($args['index'])){
-
+      $esClient = ClientBuilder::create()
+                  ->setHosts(array(AppConfig::config('elastic.default.host')))
+                  ->build();
+      $searchPt = $args['index'];
+      $searchParams['index'] = $searchPt;
+      $searchParams['body']['query']['query_string']['query'] = '*';
+      $results = $esClient->search($searchParams);
+      $data = $results['hits'];
+      $response->write(json_encode($data));
     }
     else {
-      // code...
+      $response->write(json_encode("error"));
     }
 });
+
+
+$app->get('/getdatabyid/{index}/{id}', function ($request, $response, $args) {
+    if (isset($args['index']) && isset($args['id'])){
+      $esClient = ClientBuilder::create()
+                  ->setHosts(array(AppConfig::config('elastic.default.host')))
+                  ->build();
+      $params['index'] = $args["index"];
+      $params['body']['query']['match']['_id'] = $args['id'];
+      $results = $esClient->search($params);
+      $data = $results['hits'];
+      $response->write(json_encode($data));
+    }
+    else {
+      $response->write(json_encode("Error"));
+    }
+});
+
 
 $app->run();
