@@ -26,8 +26,29 @@ function placeRequest()
     event.preventDefault();
     var action = $("form").attr("action");
     var indexes = document.getElementById('index_list').value;
-    action="index.php?_search=" + indexes;
+    action="index.php?start=0&_search=" + indexes;
     window.location.href = action;
+}
+
+function start()
+{
+    // event.preventDefault();
+    // var action = $("form").attr("action");
+    // var indexes = document.getElementById('index_list').value;
+    action="index.php?start=0";
+    window.location.href = action;
+}
+
+function setData()
+{
+  $('#loading span').text('Generating Sample Data.. Please wait..');
+    $.ajax({
+        type: "POST",
+        url: "setData.php",
+        data: { name: "John" }
+        }).done(function( msg ) {
+        $('#loading span').text('Sample Data has been generated, Please reload the page to continue..');
+    });
 }
 
 function download(filename, text)
@@ -55,7 +76,14 @@ function download(filename, text)
   }
 
 </style>
+<h1>Kubernetes Sample Web Application </h1> </br> </br>
+<button onclick="setData()">Click here to Genarate sample Data</button>
+</br> </br> <div id="loading"><span> </span></div>
+</br> </br> </br>
+<button onclick="start()">Click here to Start</button>
 <?php
+if (isset($_GET['start'])&& $_GET["start"] != "")
+{
 $response = $client->request('GET', $httpProtocol . AppConfig::config('api.url').'/getindex');
 
 if ($response->getStatusCode() == "200")
@@ -87,6 +115,7 @@ if ($response->getStatusCode() == "200")
     </form>
     <?php
   }
+
   if(isset($_GET["_search"]) && $_GET["_search"] != "")
   {
     $searchPt = $_GET["_search"];
@@ -107,45 +136,46 @@ if ($response->getStatusCode() == "200")
           echo '<thead><tr><th>ID</th><th>Source Data</th></tr></thead>';
           echo '<tr>';
           echo '<td>'.$_GET["_id"].'</td>';
-          echo '<td>';
-          print_r($source);
-          echo '</td>';
-          echo '</tr>';
-          echo '</table>';
+            echo '<td>';
+            print_r($source);
+            echo '</td>';
+            echo '</tr>';
+            echo '</table>';
+          }
         }
       }
-    }
-    else {
-      $requestPt = "/getdatabyindex/" . $searchPt;
-      $res_getdatabyindex = $client->request('GET', $httpProtocol . AppConfig::config('api.url') . $requestPt );
-      if ($res_getdatabyindex->getStatusCode() == "200")
-      {
-        $responseDataAll = $res_getdatabyindex->getBody();
-        $data = (array) json_decode($responseDataAll);
-        if(isset($data['total']) && $data['total'] > 0)
+      else {
+        $requestPt = "/getdatabyindex/" . $searchPt;
+        $res_getdatabyindex = $client->request('GET', $httpProtocol . AppConfig::config('api.url') . $requestPt );
+        if ($res_getdatabyindex->getStatusCode() == "200")
         {
-          echo '<pre>';
-          echo '<table style="width:100%" >';
-          echo '<thead><tr><th>Index</th><th>Type</th><th>ID</th></tr></thead>';
-          for ($dtSource = 0; $dtSource <= $data['total']; $dtSource++)
+          $responseDataAll = $res_getdatabyindex->getBody();
+          $data = (array) json_decode($responseDataAll);
+          if(isset($data['total']) && $data['total'] > 0)
           {
-            $hits = (array) $data['hits'][$dtSource];
-            $curIndex = $hits['_index'];
-            $type = $hits['_type'];
-            $id = $hits['_id'];
-            if ($id != "")
+            echo '<pre>';
+            echo '<table style="width:100%" >';
+            echo '<thead><tr><th>Index</th><th>Type</th><th>ID</th></tr></thead>';
+            for ($dtSource = 0; $dtSource <= $data['total']; $dtSource++)
             {
-              echo '<tr>';
-              echo '<td>'.$curIndex.'</td>';
-              echo '<td>'.$type.'</td>';
-              echo '<td><a href=index.php?_search='.$curIndex.'&_id='.$id.'>'.$id.'</a></td>';
-              echo '</tr>';
+              $hits = (array) $data['hits'][$dtSource];
+              $curIndex = $hits['_index'];
+              $type = $hits['_type'];
+              $id = $hits['_id'];
+              if ($id != "")
+              {
+                echo '<tr>';
+                echo '<td>'.$curIndex.'</td>';
+                echo '<td>'.$type.'</td>';
+                echo '<td><a href=index.php?start=0&_search='.$curIndex.'&_id='.$id.'>'.$id.'</a></td>';
+                echo '</tr>';
+              }
             }
+            echo '</table>';
           }
-          echo '</table>';
-        }
-        else {
-         echo "No data found!";
+          else {
+           echo "No data found!";
+          }
         }
       }
     }

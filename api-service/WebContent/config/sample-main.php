@@ -6,8 +6,8 @@ return array(
      "APPROOT"         => dirname(__FILE__) . "/../",
      "debugMode"       => 0,
      "api"             => array(
-          "appid"     => "1566628233578134",
-          "secretkey" => "42993a4a805b71126cc5a5dc8e560a4f",
+          "appid"     => "",
+          "secretkey" => "",
           "isSecure"  => FALSE,
           "auth"      => [
                "admin" => "admin",
@@ -15,9 +15,9 @@ return array(
      ),
      "elastic"        => array(
           "default" => array(
-               "host"    => "AKIAIH5JW43JE3B5PUCA",
-               "username" => "rQ0JZX5aMCg8GYTTEgLbFExLkEFVwzaPQDhogBXh",
-               "password" => "us-east-1",
+               "host"    => (isset($_ENV['ELASTIC_HOST']) ? $_ENV['ELASTIC_HOST'] :  "localhost") . ":" . (isset($_ENV['ELASTIC_PORT']) ? $_ENV['ELASTIC_PORT'] :  "9200"),
+               "username" => (isset($_ENV['ELASTIC_USER']) ? $_ENV['ELASTIC_USER'] :  "elastic"),
+               "password" => (isset($_ENV['ELASTIC_PASS']) ? $_ENV['ELASTIC_PASS'] :  "localhost"),
           )
      )
 );
