@@ -1,0 +1,199 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-elastic
+type: Opaque
+data:
+  username: ZWxhc3RpYwo=
+  password: ZWxhc3RpYwo=
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: srv-elastic
+  labels:
+    project: k8s-app
+    app: elasticsearch
+    tier: backend
+    role: database
+spec:
+  ports:
+  - port: 9200
+    name: rest-port
+    targetPort: 9200
+  - port: 9300
+    name: node-port
+    targetPort: 9300
+  selector:
+    project: k8s-app
+    app: elasticsearch
+    tier: backend
+    role: database
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dep-elasticsearch
+spec:
+  selector:
+    matchLabels:
+      project: k8s-app
+      app: elasticsearch
+      role: database
+      tier: backend
+  template:
+    metadata:
+      labels:
+        project: k8s-app
+        app: elasticsearch
+        role: database
+        tier: backend
+    spec:
+      containers:
+      - name: elasticsearch
+        image: rolindroy/elasticsearch:6.5.4
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 1000
+        command: [ "bin/elasticsearch" ]
+        env:
+        - name: ES_JAVA_OPTS
+          value: -Xms256m -Xmx512m
+        - name: bootstrap.memory_lock
+          value: "true"
+        ports:
+        - containerPort: 9200
+          name: rest-port
+        - containerPort: 9300
+          name: node-port
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  labels:
+    project: k8s-app
+    app: api-service
+    tier: middleware
+    role: api-service
+spec:
+  ports:
+  - port: 80
+    name: http-port
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: api-service
+
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: api-service
+spec:
+  selector:
+    matchLabels:
+      project: k8s-app
+      app: api-service
+      tier: middleware
+      role: api-service
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        project: k8s-app
+        app: api-service
+        tier: middleware
+        role: api-service
+    spec:
+      containers:
+      - name: api-service
+        image: rolindroy/k8s-apps:1.0-api
+        imagePullPolicy: Always
+        env:
+        - name: ELASTIC_HOST
+          value: "$(SRV_ELASTIC_SERVICE_HOST)"
+        - name: ELASTIC_PORT
+          value: "$(SRV_ELASTIC_SERVICE_PORT_REST_PORT)"
+        ports:
+        - name: http-port
+          containerPort: 80
+        readinessProbe:
+          initialDelaySeconds: 10
+          httpGet:
+            path: /
+            port: http-port
+        livenessProbe:
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+          httpGet:
+            path: /
+            port: http-port
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  labels:
+    project: k8s-app
+    app: web-service
+    tier: frontend
+    role: web-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: web-service
+
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: web-service
+spec:
+  selector:
+    matchLabels:
+      project: k8s-app
+      app: web-service
+      tier: frontend
+      role: web-service
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        project: k8s-app
+        app: web-service
+        tier: frontend
+        role: web-service
+    spec:
+      containers:
+      - name: web-service
+        image: rolindroy/k8s-apps:1.0-web
+        imagePullPolicy: Always
+        env:
+        - name: API_HOST
+          value: "$(API_SERVICE_SERVICE_HOST)"
+        - name: API_PORT
+          value: "$(API_SERVICE_SERVICE_PORT_HTTP_PORT)"
+        ports:
+        - name: http-port
+          containerPort: 80
+        readinessProbe:
+          initialDelaySeconds: 10
+          httpGet:
+            path: /
+            port: http-port
+        livenessProbe:
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+          httpGet:
+            path: /
+            port: http-port

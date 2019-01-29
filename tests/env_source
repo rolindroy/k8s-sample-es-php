@@ -1,0 +1,9 @@
+# source env_source
+
+export ELASTIC_HOST="localhost"
+export ELASTIC_PORT="9200"
+export ELASTIC_USER="elastic"
+export ELASTIC_PASS="elastic"
+
+export API_HOST="api.k8s.my-mac.com"
+export API_PORT="80"
