@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: api-service
+spec:
+  selector:
+    matchLabels:
+      project: k8s-app
+      app: api-service
+      tier: middleware
+      role: api-service
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        project: k8s-app
+        app: api-service
+        tier: middleware
+        role: api-service
+    spec:
+      containers:
+      - name: api-service
+        image: rolindroy/k8s-apps:1.0-api
+        imagePullPolicy: Always
+        env:
+        - name: ELASTIC_HOST
+          value: "$(SRV_ELASTIC_SERVICE_HOST)"
+        - name: ELASTIC_PORT
+          value: "$(SRV_ELASTIC_SERVICE_PORT_REST_PORT)"
+        ports:
+        - name: http-port
+          containerPort: 80
+        readinessProbe:
+          initialDelaySeconds: 10
+          httpGet:
+            path: /
+            port: http-port
+        livenessProbe:
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+          httpGet:
+            path: /
+            port: http-port

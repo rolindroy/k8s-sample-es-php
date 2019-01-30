@@ -37,6 +37,9 @@ spec:
         role: database
         tier: backend
     spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
       initContainers:
       - name: init-sysctl
         image: busybox
@@ -54,9 +57,7 @@ spec:
         imagePullPolicy: Always
         securityContext:
           runAsUser: 1000
-        command: [ "/usr/share/elasticsearch/bin/elasticsearch" ]
-        # command: [ "/bin/bash", "-c", "--" ]
-        # args: [ "while true; do sleep 30; done;" ]
+        command: [ "bin/elasticsearch" ]
         env:
         - name: ES_JAVA_OPTS
           value: -Xms256m -Xmx512m
@@ -68,7 +69,7 @@ spec:
         - containerPort: 9300
           name: node-port
         volumeMounts:
-        - mountPath: /usr/share/elasticsearch
+        - mountPath: /usr/share/elasticsearch/data
           name: storage
   updateStrategy:
     type: RollingUpdate

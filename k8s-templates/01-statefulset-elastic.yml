@@ -1,0 +1,67 @@
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+spec:
+  selector:
+    matchLabels:
+      project: k8s-app
+      app: elasticsearch
+      role: database
+      tier: backend
+  replicas: 3
+  serviceName: elasticsearch
+  template:
+    metadata:
+      labels:
+        project: k8s-app
+        app: elasticsearch
+        role: database
+        tier: backend
+    spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+      - name: init-sysctl
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command: ["sysctl", "-w", "vm.max_map_count=262144"]
+        securityContext:
+          privileged: true
+      containers:
+      - name: elasticsearch
+        securityContext:
+          capabilities:
+            add:
+              - IPC_LOCK
+        image: rolindroy/elasticsearch:6.5.4
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 1000
+        command: [ "bin/elasticsearch" ]
+        env:
+        - name: ES_JAVA_OPTS
+          value: -Xms256m -Xmx512m
+        - name: bootstrap.memory_lock
+          value: "true"
+        ports:
+        - containerPort: 9200
+          name: rest-port
+        - containerPort: 9300
+          name: node-port
+        volumeMounts:
+        - mountPath: /usr/share/elasticsearch/data
+          name: data
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      storageClassName: gp2
+      accessModes: [ ReadWriteOnce ]
+      resources:
+        requests:
+          storage: 1Gi

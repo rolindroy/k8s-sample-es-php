@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: web-service
+spec:
+  selector:
+    matchLabels:
+      project: k8s-app
+      app: web-service
+      tier: frontend
+      role: web-service
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        project: k8s-app
+        app: web-service
+        tier: frontend
+        role: web-service
+    spec:
+      containers:
+      - name: web-service
+        image: rolindroy/k8s-apps:1.0-web
+        imagePullPolicy: Always
+        env:
+        - name: API_HOST
+          value: "$(SRV_API_SERVICE_HOST)"
+        - name: API_PORT
+          value: "$(SRV_API_SERVICE_PORT_HTTP_PORT)"
+        ports:
+        - name: http-port
+          containerPort: 80
+        readinessProbe:
+          initialDelaySeconds: 10
+          httpGet:
+            path: /
+            port: http-port
+        livenessProbe:
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+          httpGet:
+            path: /
+            port: http-port

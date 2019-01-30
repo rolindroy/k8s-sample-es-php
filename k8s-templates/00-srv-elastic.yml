@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: srv-elastic
+  labels:
+    project: k8s-app
+    app: elasticsearch
+    tier: backend
+    role: database
+spec:
+  ports:
+  - port: 9200
+    name: rest-port
+    targetPort: 9200
+  - port: 9300
+    name: node-port
+    targetPort: 9300
+  selector:
+    project: k8s-app
+    app: elasticsearch
+    tier: backend
+    role: database

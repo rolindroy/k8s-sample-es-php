@@ -1,0 +1,47 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-elastic
+type: Opaque
+data:
+  username: ZWxhc3RpYwo=
+  password: ZWxhc3RpYwo=
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dep-elasticsearch
+spec:
+  selector:
+    matchLabels:
+      project: k8s-app
+      app: elasticsearch
+      role: database
+      tier: backend
+  template:
+    metadata:
+      labels:
+        project: k8s-app
+        app: elasticsearch
+        role: database
+        tier: backend
+    spec:
+      containers:
+      - name: elasticsearch
+        image: rolindroy/elasticsearch:6.5.4
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 1000
+        command: [ "bin/elasticsearch" ]
+        env:
+        - name: ES_JAVA_OPTS
+          value: -Xms256m -Xmx512m
+        - name: bootstrap.memory_lock
+          value: "true"
+        ports:
+        - containerPort: 9200
+          name: rest-port
+        - containerPort: 9300
+          name: node-port
